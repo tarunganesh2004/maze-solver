@@ -2,14 +2,14 @@ import pygame
 import numpy as np
 from maze_generator import MazeGenerator
 from solver import MazeSolver
+from maze_utils import save_maze, load_maze
 import time
 
 # Pygame settings
-CELL_SIZE = 20
+CELL_SIZE = 20  # Increased cell size for better visibility
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
 
 
 def draw_maze(screen, maze, path=None):
@@ -28,26 +28,41 @@ def draw_maze(screen, maze, path=None):
                 screen, GREEN, (y * CELL_SIZE, x * CELL_SIZE, CELL_SIZE, CELL_SIZE)
             )
             pygame.display.update()
-            pygame.time.delay(50)  # Animation effect
+            pygame.time.delay(30)  # Animation effect
 
 
 def main():
     """Main function to generate and solve the maze interactively."""
     pygame.init()
 
-    # User inputs for maze size and algorithm
-    width, height = 21, 21  # Must be odd numbers for proper generation
-    algorithm = (
-        input("Choose maze generation algorithm (backtracking/prim): ").strip().lower()
-    )
+    # User choice to load or generate a new maze
+    load_choice = input("Load saved maze? (yes/no): ").strip().lower()
+    if load_choice == "yes":
+        maze = load_maze()
+        if maze is None:
+            print("No saved maze found. Generating a new maze instead.")
+    else:
+        width = int(input("Enter maze width (odd number, e.g., 21): "))
+        height = int(input("Enter maze height (odd number, e.g., 21): "))
+
+        algorithm = (
+            input("Choose maze generation algorithm (backtracking/prim): ")
+            .strip()
+            .lower()
+        )
+        generator = MazeGenerator(width, height, algorithm)
+        maze = generator.generate_maze()
+
+        save_choice = input("Save this maze for later? (yes/no): ").strip().lower()
+        if save_choice == "yes":
+            save_maze(maze)
+
     solver_method = input("Choose solver (dfs/bfs): ").strip().lower()
 
-    # Generate the maze
-    generator = MazeGenerator(width, height, algorithm)
-    maze = generator.generate_maze()
-
-    # Initialize the screen
-    screen = pygame.display.set_mode((width * CELL_SIZE, height * CELL_SIZE))
+    # Initialize the screen size dynamically
+    screen_width = len(maze[0]) * CELL_SIZE
+    screen_height = len(maze) * CELL_SIZE
+    screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Maze Generator & Solver")
 
     # Draw the generated maze
